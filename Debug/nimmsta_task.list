@@ -39,13 +39,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  17 .debug_macro  0002ec6e  00000000  00000000  0002cf1a  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   0000bc53  00000000  00000000  0005bb88  2**0
+ 18 .debug_line   0000bc55  00000000  00000000  0005bb88  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    0011d5f5  00000000  00000000  000677db  2**0
+ 19 .debug_str    0011d5f5  00000000  00000000  000677dd  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_frame  00002eb4  00000000  00000000  00184dd0  2**2
+ 20 .debug_frame  00002eb4  00000000  00000000  00184dd4  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000070  00000000  00000000  00187c84  2**0
+ 21 .debug_line_str 00000070  00000000  00000000  00187c88  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -182,7 +182,6 @@ int main(void)
  800028c:	4807      	ldr	r0, [pc, #28]	; (80002ac <main+0xb0>)
  800028e:	f000 fe17 	bl	8000ec0 <HAL_GPIO_WritePin>
 
-
 		PUSH_BUTTON_INTERRUPT = FALSE;		//reset flag to exit while-loop
  8000292:	4b09      	ldr	r3, [pc, #36]	; (80002b8 <main+0xbc>)
  8000294:	2201      	movs	r2, #1
@@ -194,9 +193,9 @@ int main(void)
  800029e:	d1ba      	bne.n	8000216 <main+0x1a>
  80002a0:	2300      	movs	r3, #0
 
-  }
-  /* USER CODE END 3 */
-}
+  }//END while()
+
+} //END main()
  80002a2:	4618      	mov	r0, r3
  80002a4:	bd80      	pop	{r7, pc}
  80002a6:	bf00      	nop
@@ -209,7 +208,7 @@ int main(void)
 080002bc <SystemClock_Config>:
 /**
   * @brief System Clock Configuration
-  * @retval None
+  * @return value - None
   */
 void SystemClock_Config(void)
 {
@@ -301,7 +300,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
  800033e:	f000 f991 	bl	8000664 <Error_Handler>
-
+  }
 
   /*
    * Disable Low-speed External clock to use PC14 as a standard GPIO pin
@@ -348,9 +347,6 @@ static void MX_TIM15_Init(void)
  800038a:	b09a      	sub	sp, #104	; 0x68
  800038c:	af00      	add	r7, sp, #0
 
-  /* USER CODE BEGIN TIM15_Init 0 */
-
-  /* USER CODE END TIM15_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
  800038e:	f107 0358 	add.w	r3, r7, #88	; 0x58
@@ -381,10 +377,11 @@ static void MX_TIM15_Init(void)
  80003c0:	2100      	movs	r1, #0
  80003c2:	4618      	mov	r0, r3
  80003c4:	f002 ffc5 	bl	8003352 <memset>
+   * PWM frequency = CLK FREQ / PERIOD = 16 MHz / 10000 = 16000 Hz
+   * AutoRelode Register = ENABLE - do not have to reset the timer to zero during runtime
+   * */
 
-  /* USER CODE BEGIN TIM15_Init 1 */
 
-  /* USER CODE END TIM15_Init 1 */
   htim15.Instance = TIM15;
  80003c8:	4b3e      	ldr	r3, [pc, #248]	; (80004c4 <MX_TIM15_Init+0x13c>)
  80003ca:	4a3f      	ldr	r2, [pc, #252]	; (80004c8 <MX_TIM15_Init+0x140>)
@@ -469,7 +466,7 @@ static void MX_TIM15_Init(void)
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
  800044e:	2360      	movs	r3, #96	; 0x60
  8000450:	633b      	str	r3, [r7, #48]	; 0x30
-  sConfigOC.Pulse = 5000;
+  sConfigOC.Pulse = 5000;								//duty cycle = 50%
  8000452:	f241 3388 	movw	r3, #5000	; 0x1388
  8000456:	637b      	str	r3, [r7, #52]	; 0x34
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
@@ -509,7 +506,7 @@ static void MX_TIM15_Init(void)
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
  800048c:	2300      	movs	r3, #0
  800048e:	60fb      	str	r3, [r7, #12]
-  sBreakDeadTimeConfig.DeadTime = 10;
+  sBreakDeadTimeConfig.DeadTime = 10;								// Dead time insertion for complementary PWM
  8000490:	230a      	movs	r3, #10
  8000492:	613b      	str	r3, [r7, #16]
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
@@ -533,9 +530,7 @@ static void MX_TIM15_Init(void)
     Error_Handler();
  80004b2:	f000 f8d7 	bl	8000664 <Error_Handler>
   }
-  /* USER CODE BEGIN TIM15_Init 2 */
 
-  /* USER CODE END TIM15_Init 2 */
   HAL_TIM_MspPostInit(&htim15);
  80004b6:	4803      	ldr	r0, [pc, #12]	; (80004c4 <MX_TIM15_Init+0x13c>)
  80004b8:	f000 f91e 	bl	80006f8 <HAL_TIM_MspPostInit>
@@ -692,8 +687,7 @@ static void MX_GPIO_Init(void)
  80005ac:	2017      	movs	r0, #23
  80005ae:	f000 fada 	bl	8000b66 <HAL_NVIC_EnableIRQ>
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+
 }
  80005b2:	bf00      	nop
  80005b4:	3720      	adds	r7, #32
@@ -705,10 +699,10 @@ static void MX_GPIO_Init(void)
  80005c4:	48000800 	.word	0x48000800
 
 080005c8 <TIMER_TEST_TONE>:
-
-
-
-/* Test tone at startup*/
+ * @brief Function to generate test tone for 880 Hz on startup
+  * @param None
+  * @retval None
+  */
 void TIMER_TEST_TONE()
 {
  80005c8:	b580      	push	{r7, lr}
@@ -782,10 +776,10 @@ void TIMER_TEST_TONE()
  8000638:	2000002c 	.word	0x2000002c
 
 0800063c <HAL_GPIO_EXTI_Callback>:
-
-
-
-/* INTERRUPT HANDLER */
+/*
+ * brief@  GPIO_PUSH_BUTTON_PIN interrupt handler
+ * retval None
+ * */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
  800063c:	b480      	push	{r7}
@@ -795,6 +789,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  8000644:	80fb      	strh	r3, [r7, #6]
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
+  //Check if interrupt occurred at the right PIN
   if(GPIO_Pin == Push_Buttom_Pin)
  8000646:	88fb      	ldrh	r3, [r7, #6]
  8000648:	2b20      	cmp	r3, #32

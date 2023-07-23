@@ -1,36 +1,24 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
+  * @description	: Programming task to play buzzer tone at startup and consecutive
+  * 				  three musical notes C6, D6 and E6 after Push button interrupt
   */
-/* USER CODE END Header */
+
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+// Timer base handler structure object
 TIM_HandleTypeDef htim15;
 
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM15_Init(void);
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
+// PUSH BUTTON INTERRUPT FLAG
 static unsigned char PUSH_BUTTON_INTERRUPT = FALSE;
 /* USER CODE END 0 */
 
@@ -94,7 +82,7 @@ int main(void)
 
 /**
   * @brief System Clock Configuration
-  * @retval None
+  * @return value - None
   */
 void SystemClock_Config(void)
 {
@@ -134,7 +122,6 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-
   /*
    * Disable Low-speed External clock to use PC14 as a standard GPIO pin
    */
@@ -151,18 +138,21 @@ void SystemClock_Config(void)
 static void MX_TIM15_Init(void)
 {
 
-  /* USER CODE BEGIN TIM15_Init 0 */
-
-  /* USER CODE END TIM15_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
-  /* USER CODE BEGIN TIM15_Init 1 */
 
-  /* USER CODE END TIM15_Init 1 */
+  /*
+   * Configuring TIMER 15 as PWM generator.
+   * Generating Complimentary PWM on CHANNEL 1 Pin: PG9 and PG10
+   * PWM frequency = CLK FREQ / PERIOD = 16 MHz / 10000 = 16000 Hz
+   * AutoRelode Register = ENABLE - do not have to reset the timer to zero during runtime
+   * */
+
+
   htim15.Instance = TIM15;
   htim15.Init.Prescaler = 0;
   htim15.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -190,7 +180,7 @@ static void MX_TIM15_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 5000;
+  sConfigOC.Pulse = 5000;								//duty cycle = 50%
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -203,7 +193,7 @@ static void MX_TIM15_Init(void)
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = 10;
+  sBreakDeadTimeConfig.DeadTime = 10;								// Dead time insertion for complementary PWM
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
@@ -211,9 +201,7 @@ static void MX_TIM15_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM15_Init 2 */
 
-  /* USER CODE END TIM15_Init 2 */
   HAL_TIM_MspPostInit(&htim15);
 
 }
@@ -269,14 +257,16 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+
 }
 
 
 
-
-/* Test tone at startup*/
+/**
+ * @brief Function to generate test tone for 880 Hz on startup
+  * @param None
+  * @retval None
+  */
 void TIMER_TEST_TONE()
 {
 	//Load timer auto-reload register with test-tone frequency
@@ -309,15 +299,15 @@ void TIMER_TEST_TONE()
 }
 
 
-
-
-
-
-/* INTERRUPT HANDLER */
+/*
+ * brief@  GPIO_PUSH_BUTTON_PIN interrupt handler
+ * retval None
+ * */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
+  //Check if interrupt occurred at the right PIN
   if(GPIO_Pin == Push_Buttom_Pin)
   {
 	  PUSH_BUTTON_INTERRUPT = TRUE;
