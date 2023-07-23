@@ -5,7 +5,9 @@
   *                   This file contains the common defines of the application.
   ******************************************************************************
 
-/* Define to prevent recursive inclusion -------------------------------------*/
+*/
+
+
 #ifndef __MAIN_H
 #define __MAIN_H
 
@@ -32,6 +34,8 @@ extern "C" {
 void TIMER_TEST_TONE();
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
+
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);

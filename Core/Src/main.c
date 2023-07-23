@@ -20,7 +20,7 @@ static void MX_TIM15_Init(void);
 
 // PUSH BUTTON INTERRUPT FLAG
 static unsigned char PUSH_BUTTON_INTERRUPT = FALSE;
-/* USER CODE END 0 */
+
 
 /**
   * @brief  The application entry point.
