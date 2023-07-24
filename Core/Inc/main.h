@@ -30,8 +30,16 @@ extern "C" {
 #define TIM15_PWM_FREQ_D6    13617		//D6 - 1175 Hz
 #define TIM15_PWM_FREQ_E6    12130		//E6 - 1319 Hz
 
+
+/*System Initialize*/
+void SYSTEM_INIT();
+
 /* Test tone function declaration */
 void TIMER_TEST_TONE();
+
+/*Function to enter Low-power mode - STOP MODE 1*/
+void STM_ENTER_LPM();
+
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 

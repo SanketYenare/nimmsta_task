@@ -23,62 +23,112 @@ static unsigned char PUSH_BUTTON_INTERRUPT = FALSE;
 
 
 /**
-  * @brief  The application entry point.
+  * @brief  : Application entry point.
+  * Initialization of System clock, GPIOs, Timer. A test tone is played after the initialization.
+  *
   * @retval int
   */
 int main(void)
 {
 
-  HAL_Init();
-
-  SystemClock_Config();
-
-  MX_GPIO_Init();
-  MX_TIM15_Init();
-
+  // Initialize system peripherals
+  SYSTEM_INIT();
   // Issue test tone
   TIMER_TEST_TONE();
 
 
-  while (PUSH_BUTTON_INTERRUPT)
+  /*
+   * PUSH BUTTON is treated as an external hardware interrupt connected to GPIO - PC5.
+   * As the button in pressed, interrupt is caught at the RISING EDGE.
+   * In the while() a PUSH_BUTTON_INTERRUPT flag is polled.
+   * */
+  while (1)
   {
+		//Enter Low-power mode - STOP mode.
+		STM_ENTER_LPM();
 
-	    //Load timer auto-reload register with note frequency
-	    TIM15->ARR = TIM15_PWM_FREQ_C6;				//C6 Note frequency
 
-		// Enable Buzzer-logic circuit
-		HAL_GPIO_WritePin(CPU_BUZZER_DISABLE_OUT_GPIO_Port, CPU_BUZZER_DISABLE_OUT_Pin, GPIO_PIN_SET);
-		// Enable H-bridge functioning
-		HAL_GPIO_WritePin(CPU_BUZZER_SLEEP_OUT_GPIO_Port, CPU_BUZZER_SLEEP_OUT_Pin, GPIO_PIN_SET);
+	    if(PUSH_BUTTON_INTERRUPT)
+	    {
+		    //Load timer auto-reload register with note frequency
+		    TIM15->ARR = TIM15_PWM_FREQ_C6;				//C6 Note frequency
 
-		// start Timer PWM
-		HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
-		HAL_TIMEx_PWMN_Start(&htim15, TIM_CHANNEL_1);
-		HAL_Delay(500);								//wait 500ms
+			// Enable Buzzer-logic circuit
+			HAL_GPIO_WritePin(CPU_BUZZER_DISABLE_OUT_GPIO_Port, CPU_BUZZER_DISABLE_OUT_Pin, GPIO_PIN_SET);
+			// Enable H-bridge functioning
+			HAL_GPIO_WritePin(CPU_BUZZER_SLEEP_OUT_GPIO_Port, CPU_BUZZER_SLEEP_OUT_Pin, GPIO_PIN_SET);
 
-		TIM15->ARR = TIM15_PWM_FREQ_D6;				//D6 Note frequency
+			// start Timer PWM
+			HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
+			HAL_TIMEx_PWMN_Start(&htim15, TIM_CHANNEL_1);
+			HAL_Delay(500);								//wait 500ms
 
-		HAL_Delay(500);								//wait 500ms
+			TIM15->ARR = TIM15_PWM_FREQ_D6;				//D6 Note frequency
 
-		TIM15->ARR = TIM15_PWM_FREQ_E6;				//E6 Note frequency
+			HAL_Delay(500);								//wait 500ms
 
-		HAL_Delay(500);								//wait 500ms
+			TIM15->ARR = TIM15_PWM_FREQ_E6;				//E6 Note frequency
 
-		// Disable H-bridge
-		HAL_GPIO_WritePin(CPU_BUZZER_SLEEP_OUT_GPIO_Port, CPU_BUZZER_SLEEP_OUT_Pin, GPIO_PIN_SET);
+			HAL_Delay(500);								//wait 500ms
 
-		//Stop Timer PWM
-		HAL_TIM_PWM_Stop(&htim15, TIM_CHANNEL_1);
-		HAL_TIMEx_PWMN_Stop(&htim15, TIM_CHANNEL_1);
+			// Disable H-bridge
+			HAL_GPIO_WritePin(CPU_BUZZER_SLEEP_OUT_GPIO_Port, CPU_BUZZER_SLEEP_OUT_Pin, GPIO_PIN_SET);
 
-		// Disable Buzzer-logic circuit
-		HAL_GPIO_WritePin(CPU_BUZZER_DISABLE_OUT_GPIO_Port, CPU_BUZZER_DISABLE_OUT_Pin, GPIO_PIN_SET);
+			//Stop Timer PWM
+			HAL_TIM_PWM_Stop(&htim15, TIM_CHANNEL_1);
+			HAL_TIMEx_PWMN_Stop(&htim15, TIM_CHANNEL_1);
 
-		PUSH_BUTTON_INTERRUPT = FALSE;		//reset flag to exit while-loop
+			// Disable Buzzer-logic circuit
+			HAL_GPIO_WritePin(CPU_BUZZER_DISABLE_OUT_GPIO_Port, CPU_BUZZER_DISABLE_OUT_Pin, GPIO_PIN_SET);
+
+			PUSH_BUTTON_INTERRUPT = FALSE;		//RESET push button flag
+
+	    }//END if
 
   }//END while()
 
 } //END main()
+
+
+
+/*
+ * brief@  Function to setup controller modules
+ * 			- System Clock setup
+ * 			- GPIO setup
+ * 			- Timer Setup
+ * */
+void SYSTEM_INIT()
+{
+
+	HAL_Init();
+
+	//Initialize clock
+	SystemClock_Config();
+
+	// Initialize GPIOs
+	MX_GPIO_Init();
+
+	//Initialize Timer
+	MX_TIM15_Init();
+
+}
+
+/*
+ * @brief:	Enter Low-power mode - STOP mode
+ * 			- Low power regulator ON
+ * 			- CPU - OFF
+ * 			- GPIO enabled for Interrupt
+ * 			- WAKE-UP by External interrupt
+ *
+ * */
+void STM_ENTER_LPM()
+{
+
+	//Enter STOP_MODE 1 - LOW POWR REGULATOR for Lower power consumption. Trade-off is Delayed Wake-up time
+	HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+}
+
+
 
 /**
   * @brief System Clock Configuration
@@ -131,9 +181,14 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief TIM15 Initialization Function
-  * @param None
-  * @retval None
+	* @brief TIM15 Initialization Function
+	* Configuring TIMER 15 as PWM generator.
+	* Generating Complimentary PWM on CHANNEL 1 Pin: PG9 and PG10
+	* PWM frequency = CLK FREQ / PERIOD = 16 MHz / 10000 = 16000 Hz
+	* AutoRelode Register = ENABLE - do not have to reset the timer to zero during runtime
+	*
+	* @param None
+	* @retval None
   */
 static void MX_TIM15_Init(void)
 {
@@ -144,15 +199,6 @@ static void MX_TIM15_Init(void)
   TIM_OC_InitTypeDef sConfigOC = {0};
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
-
-  /*
-   * Configuring TIMER 15 as PWM generator.
-   * Generating Complimentary PWM on CHANNEL 1 Pin: PG9 and PG10
-   * PWM frequency = CLK FREQ / PERIOD = 16 MHz / 10000 = 16000 Hz
-   * AutoRelode Register = ENABLE - do not have to reset the timer to zero during runtime
-   * */
-
-
   htim15.Instance = TIM15;
   htim15.Init.Prescaler = 0;
   htim15.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -160,6 +206,7 @@ static void MX_TIM15_Init(void)
   htim15.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim15.Init.RepetitionCounter = 1;
   htim15.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+
   if (HAL_TIM_Base_Init(&htim15) != HAL_OK)
   {
     Error_Handler();
@@ -175,12 +222,13 @@ static void MX_TIM15_Init(void)
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+
   if (HAL_TIMEx_MasterConfigSynchronization(&htim15, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 5000;								//duty cycle = 50%
+  sConfigOC.Pulse = 5000;								//Duty cycle = 50%
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -214,8 +262,6 @@ static void MX_TIM15_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -256,7 +302,6 @@ static void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-
 
 }
 
@@ -310,6 +355,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   //Check if interrupt occurred at the right PIN
   if(GPIO_Pin == Push_Buttom_Pin)
   {
+	  __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);  //clears wake-up flag
+
+	  //Re-initialize system peripherals
+	  SYSTEM_INIT();
+
+	  //Set button interrupt flag
 	  PUSH_BUTTON_INTERRUPT = TRUE;
   }
 
@@ -320,13 +371,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
   {
+	  break;
   }
-  /* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
