@@ -18,9 +18,14 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
 
-// defines for boolean keywords
-#define TRUE  0x00
-#define FALSE 0x01
+//Defining boolean type
+typedef enum{
+
+	false = 0,
+	true = 1
+}boolean;
+
+
 
 /*
  * defines for different tone frequencies

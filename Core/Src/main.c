@@ -19,7 +19,8 @@ static void MX_GPIO_Init(void);
 static void MX_TIM15_Init(void);
 
 // PUSH BUTTON INTERRUPT FLAG
-static unsigned char PUSH_BUTTON_INTERRUPT = FALSE;
+//volatile unsigned char PUSH_BUTTON_INTERRUPT = FALSE;				//volatile because compiler should now optimize it. value should be read directly from the memory
+volatile boolean PUSH_BUTTON_INTERRUPT = false;
 
 
 /**
@@ -81,7 +82,7 @@ int main(void)
 			// Disable Buzzer-logic circuit
 			HAL_GPIO_WritePin(CPU_BUZZER_DISABLE_OUT_GPIO_Port, CPU_BUZZER_DISABLE_OUT_Pin, GPIO_PIN_SET);
 
-			PUSH_BUTTON_INTERRUPT = FALSE;		//RESET push button flag
+			PUSH_BUTTON_INTERRUPT = false;		//RESET push button flag
 
 	    }//END if
 
@@ -361,7 +362,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  SYSTEM_INIT();
 
 	  //Set button interrupt flag
-	  PUSH_BUTTON_INTERRUPT = TRUE;
+	  PUSH_BUTTON_INTERRUPT = true;
   }
 
 }
