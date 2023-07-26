@@ -8,7 +8,7 @@ Changed  **CPU_BUZZER_OUT2**   from **PA3** to **PG9** to get complementary PWM 
 
 
 # Implementation
-The main routine generates a test tone at the startup.** GPIO PC5 **is implemented as an Interrupt pin for the **PUSH BUTTON** interrupt. 
+The main routine generates a test tone at the startup. **GPIO PC5** is implemented as an Interrupt pin for the **PUSH BUTTON** interrupt. 
 After the test tone is generated, the microcontroller is sent to **LOW POWER MODE**. The **LOW POWER MODE** is exited when the PUSH BUTTON interrupt is obtained. 
 Getting the **PUSH BUTTON** interrupt, system peripherals are reinitialized, and one user-defined interrupt flag is set, which is later checked in the main routine 
 to generate 3 tones with a 500ms delay. The flag is reset after the tones are played and the controller goes back to **LOW POWER MODE**
