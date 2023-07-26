@@ -203,9 +203,9 @@ static void MX_TIM15_Init(void)
   htim15.Instance = TIM15;
   htim15.Init.Prescaler = 0;
   htim15.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim15.Init.Period = 10000;
+  htim15.Init.Period = 9999;							//Setting PWM period to be 1.6 kHz
   htim15.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim15.Init.RepetitionCounter = 1;
+  htim15.Init.RepetitionCounter = 0;					//PWM update event should occur at every counter overflow
   htim15.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 
   if (HAL_TIM_Base_Init(&htim15) != HAL_OK)
@@ -229,7 +229,7 @@ static void MX_TIM15_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 5000;								//Duty cycle = 50%
+  sConfigOC.Pulse = 5000;								//Duty cycle = 50% - Timer CCR register value
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
